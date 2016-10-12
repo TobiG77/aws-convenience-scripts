@@ -193,4 +193,3 @@ fi
 [ -n "$PROFILE" ] && activate_aws_profile
 [ "$ONESHOT" == true ] && run_additional_args
 [ "$RESTORE" == true ] && restore_aws_configuration
-
