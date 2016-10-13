@@ -1,3 +1,6 @@
+.PHONY: test run_test
+
+TEST_FILES := $(wildcard test/*_test.sh )
 
 default: help
 
@@ -8,3 +11,4 @@ help:
 install:
 		mkdir -p $(HOME)/bin
 		install -m 755 aws-profile-switch $(HOME)/bin
+		install -m 755 codedeploy $(HOME)/bin

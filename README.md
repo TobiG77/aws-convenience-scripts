@@ -1,8 +1,12 @@
-# AWS-PROFILE-SWITCHER
+# AWS Convenience Scripts
+
+A collection of KISS scripts providing functionality I found myself reinventing over & over.
+
+## AWS-PROFILE-SWITCHER
 
 Simple shell script to set a specific aws profile as default for tools, with inadequate aws profile support
 
-## Usage
+### Usage
 
 Supported switches are:
 
@@ -22,8 +26,28 @@ Supported switches are:
                   1) --convert and --profile activating your selected profile
                   2) Execute any command you\'ve added post --
                   3) Run --restore undoing the modifications
-
 ```
-## ToDo
+
+### ToDo
 
 * need to review sed / awk usage to correctly match in case of multiple profile sections
+
+## CODEDEPLOY-WRAPPER
+
+Convenience wrapper around codedeploy for automation.
+
+1) Upload given file to s3 bucket
+2) Kick Off Codedeploy
+3) Return status
+
+### Usage
+
+```
+
+-v | --verbose )    : Shell script debugging
+-n | --name)        : Set APPLICATION_NAME (mandatory)
+-g | --group)       : Set DEPLOYMENT_GROUP (mandatory)
+-f | --file )       : File to upload (mandatory)
+-b | --bucket)      : Bucket to upload to (mandatory)
+-d | --description) : Codedeploy Deployment Description (optional)
+```

@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+# this script will only work on bash due to string substition
+
+# Convenience script for opinionated workflow,
+# upload source to s3 bucket
+# kick off codedeploy deployment
+# return success/fail
+
+abort_on_error() {
+
+	echo -e "$@" 1>&2
+	exit 1
+
+}
+
+print_help() {
+
+cat <<EOT
+
+    Convenience wrapper around codedeploy for automation.
+
+    1) Upload given file to s3 bucket
+    2) Kick Off Codedeploy
+    3) Return status
+
+    -v | --verbose )    : Shell script debugging
+    -n | --name)        : Set APPLICATION_NAME (mandatory)
+    -g | --group)       : Set DEPLOYMENT_GROUP (mandatory)
+    -f | --file )       : File to upload (mandatory)
+    -b | --bucket)      : Bucket to upload to (mandatory)
+    -d | --description) : Codedeploy Deployment Description (optional)
+
+EOT
+
+}
+
+[ "`type source`" == "source is a shell builtin" ] || abort_on_error "This script is written for Bash!"
+
+OPTS=`getopt -o vhdn:f:b: --long help,verbose,name:,file:,bucket:,description:,group: -n 'parse-options' -- "$@"`
+
+export SCRIPT_SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
+
+[ $? == 0 ] || abort_on_error "Failed parsing options."
+
+eval set -- $OPTS
+
+set -e
+
+while true; do
+  case "$1" in
+    -h | --help) print_help ; exit 0 ;;
+    -v | --verbose ) DEBUG=true ;;
+    -n | --name) APPLICATION_NAME="$2" ;;
+    -g | --group) DEPLOYMENT_GROUP="$2" ;;
+    -f | --file ) RELEASE_FILE="$2";;
+    -b | --bucket) BUCKET_NAME="$2" ;;
+    -d | --description) RELEASE_DESCRIPTION="$@" ;;
+    -- ) REMAINING_ARGS="$@" ; break ;;
+  esac
+  shift
+done
+
+if [ "$OPTS" == " --" ]
+then
+    print_help
+    exit 0
+fi
+
+echo "Remaining arguments: ${REMAINING_ARGS}"
+
+[ "$DEBUG" == true ] && set -x
+
+test -n "${APPLICATION_NAME}" || abort_on_error "Application Name not set"
+test -n "${DEPLOYMENT_GROUP}}" || abort_on_error "Deployment Group not set"
+test -n "${RELEASE_FILE}" || abort_on_error "File containing release not specified"
+test -e "${RELEASE_FILE}" || abort_on_error "Specified file containing release not found"
+test -n "${BUCKET_NAME}" || abort_on_error "Bucket name not specified"
+test -n "${RELEASE_DESCRIPTION}" || RELEASE_DESCRIPTION="Deployment from `hostname` at `date --utc`"
+release_basename="$(basename ${RELEASE_FILE})"
+
+upload_release_to_s3() {
+
+    aws s3 cp ${RELEASE_FILE} s3://${BUCKET_NAME}/${release_basename}
+
+}
+
+create_deployment() {
+
+    deployment_id=`aws deploy create-deployment \
+      --application-name ${APPLICATION_NAME} \
+      --deployment-group-name ${DEPLOYMENT_GROUP} \
+      --deployment-config-name CodeDeployDefault.OneAtATime \
+      --description "${RELEASE_DESCRIPTION}" \
+      --s3-location bucket=${BUCKET_NAME},bundleType=tgz,key="${release_basename}" | jq --raw-output .deploymentId`
+
+    test -n "$deployment_id" || abort_on_error "Failed to create a deployment"
+
+}
+
+upload_release_to_s3
+create_deployment
+
+for i in `seq 0 60`
+do
+  sleep 5
+  deployment_status=$(aws deploy get-deployment --deployment-id "${deployment_id}" | jq --raw-output .deploymentInfo.status )
+  [ "$deployment_status" == "Failed" ] && break
+  [ "$deployment_status" == "Succeeded" ] && break
+done
+
+if [ "$deployment_status" == "Succeeded" ]
+then
+    echo "Deployment successful: $deployment_id"
+    exit 0
+else
+    echo "Deployment failed: ${deployment_id} : ${deployment_status}"
+    exit 1
+fi
+
