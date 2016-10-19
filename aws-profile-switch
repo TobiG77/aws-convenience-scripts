@@ -24,6 +24,8 @@ Supported switches are:
 
 -h or --help    : Prints this help.
 
+-l or --list    : List available profiles
+
 -c or --convert : to amend your aws configuration for use with this script,
                   Please note, this flag requires to also use the --profile switch, see below.
 
@@ -152,9 +154,16 @@ activate_aws_profile() {
 
 }
 
+list_profiles() {
+
+    echo "Available AWS profiles:"
+    egrep "^\[(default|profile)" $BACKUP_CONFIG | sed -e 's|\[profile ||g' -e 's|\]||g'
+
+}
+
 [ "`type source`" == "source is a shell builtin" ] || abort_on_error "This script is written for Bash!"
 
-OPTS=`getopt -o p:h1rcfd --long profile:,help,one-shot,restore,convert,force,debug -n 'parse-options' -- "$@"`
+OPTS=`getopt -o p:h1rcfdl --long profile:,help,one-shot,restore,convert,force,debug,list -n 'parse-options' -- "$@"`
 
 [ $? == 0 ] || abort_on_error "Failed parsing options."
 
@@ -169,6 +178,7 @@ while true; do
     -p | --profile ) PROFILE="$2";;
     -h | --help ) print_help ;;
     -d | --debug ) DEBUG=true ;;
+    -l | --list ) list_profiles ; exit 0 ;;
     -- ) REMAINING_ARGS="$@" ; break ;;
   esac
   shift
