@@ -29,7 +29,7 @@ Supported switches are:
 -c or --convert : to amend your aws configuration for use with this script,
                   Please note, this flag requires to also use the --profile switch, see below.
 
--p or --profile : the name of the profile to activate,
+-s or --switch  : the name of the profile to activate,
                   Please note, the profile has to be present in your current aws configuration
                   in order to select it.
 
@@ -163,7 +163,7 @@ list_profiles() {
 
 [ "`type source`" == "source is a shell builtin" ] || abort_on_error "This script is written for Bash!"
 
-OPTS=`getopt -o p:h1rcfdl --long profile:,help,one-shot,restore,convert,force,debug,list -n 'parse-options' -- "$@"`
+OPTS=`getopt -o s:h1rcfdl --long switch:,help,one-shot,restore,convert,force,debug,list -n 'parse-options' -- "$@"`
 
 [ $? == 0 ] || abort_on_error "Failed parsing options."
 
@@ -175,7 +175,7 @@ while true; do
     -f | --force ) FORCE=true ;;
     -1 | --one-shot ) CONVERT=true ; ONESHOT=true ; RESTORE=true ;;
     -r | --restore ) RESTORE=true ;;
-    -p | --profile ) PROFILE="$2";;
+    -s | --switch ) PROFILE="$2";;
     -h | --help ) print_help ;;
     -d | --debug ) DEBUG=true ;;
     -l | --list ) list_profiles ; exit 0 ;;
@@ -203,3 +203,6 @@ fi
 [ -n "$PROFILE" ] && activate_aws_profile
 [ "$ONESHOT" == true ] && run_additional_args
 [ "$RESTORE" == true ] && restore_aws_configuration
+
+/bin/true
+

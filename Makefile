@@ -10,5 +10,5 @@ help:
 
 install:
 		mkdir -p $(HOME)/bin
-		install -m 755 aws-profile-switch $(HOME)/bin
+		install -m 755 aws-profile $(HOME)/bin
 		install -m 755 codedeploy $(HOME)/bin
