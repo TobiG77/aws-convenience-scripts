@@ -6,17 +6,23 @@ A collection of KISS scripts providing functionality I found myself reinventing 
 
 Simple shell script to set a specific aws profile as default for tools, with inadequate aws profile support
 
+This script modifies ~/.aws/config and ~/.aws/credentials to enable tools that do not natively support aws profiles
+The default mode of this script is to modify the file structure in ~/.aws to persist a specific profile.
+
 ### Usage
 
 Supported switches are:
 
 ```
+
 -h or --help    : Prints this help.
+
+-l or --list    : List available profiles
 
 -c or --convert : to amend your aws configuration for use with this script,
                   Please note, this flag requires to also use the --profile switch, see below.
 
--p or --profile : the name of the profile to activate,
+-s or --switch  : the name of the profile to activate,
                   Please note, the profile has to be present in your current aws configuration
                   in order to select it.
 
