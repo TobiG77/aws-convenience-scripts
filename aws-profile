@@ -152,12 +152,15 @@ activate_aws_profile() {
     sed "s|^\[${PROFILE}|\[default|g" \
     > $HOME/.aws/credentials
 
+    echo "#CURRENT_PROFILE: ${PROFILE}" >> ~/.aws/config
+
 }
 
 list_profiles() {
 
     echo "Available AWS profiles:"
     egrep "^\[(default|profile)" $BACKUP_CONFIG | sed -e 's|\[profile ||g' -e 's|\]||g'
+    echo "CURRENT_PROFILE: `grep CURRENT_PROFILE ~/.aws/config | sed 's|#CURRENT_PROFILE:||g'`"
 
 }
 
